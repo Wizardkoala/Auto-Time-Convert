@@ -1,5 +1,10 @@
 # Auto-Time-Convert
-This is a project created make the process of planing dates with people over-seas a little easier on discord.  
+This is a project created make the process of planing dates with people over-seas a little easier on discord. 
+The bot automatically converts times that are sent in chat to those that other people of registed.
+It can support a bunch of different formats a few examples are listed:
+- 5pm
+- 3:30 am
+- 2:00 (In this case it would assume pm)
 
 ## Setup
 ### Creating a Discord Bot
