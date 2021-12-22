@@ -10,7 +10,7 @@ It can support a bunch of different formats a few examples are listed:
 ### Creating a Discord Bot
 1. Go to https://discord.com/developers/applications and create a new application.
 2. Under the 'Bot' tab click add bot.
-3. Copy the Bot token and safe it in a safe place, NEVER share this token.
+3. Copy the Bot token and save it in a safe place, NEVER share this token.
 ### Setting up the code
 1. Download and extract the source code.
 2. Run `pip3 install -r requirements.txt` in the codes directory.
