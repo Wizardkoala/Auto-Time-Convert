@@ -22,7 +22,7 @@ can see all channels.
 Anyone you share this with will be able to shutdown the bot and gain information about the machine it is running on.
 6. Setup the TOTP token in any authenticator app of your choosing.
 ### Setting up users timezone
-Keep in mind anyone can change there own timezone with `TRegister! <Timezone>`. To setup someone elses timezone type: `TRegisterOther! <UserId> <Friendly Name> <Timezone>`
+Keep in mind anyone can change there own timezone with `TRegister! <Timezone>`. To setup someone elses timezone type: `TRegisterOther! <6-digit OTP> <UserId> <Friendly Name> <Timezone>`
 - UserId: This is retreived by right-clicking on someone with developer mode enabled and selecting, "Copy ID"
 - Friendly Name: This is just a name so you can identify them in the timezones.json file if needed
 - Timezone: This is the timezone the user is in. eg. America/Denver
