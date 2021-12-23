@@ -1,3 +1,7 @@
+# Wizardkoala/2021
+# https://github.com/Wizardkoala/Auto-Time-Convert
+# Python 3.9.6
+# 
 from datetime import datetime as time
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from os import name as osname
@@ -9,7 +13,18 @@ import pyotp
 
 
 OnReadyStatus = "10-4 Soldier"
-Version       = "Iron-1.5"
+Version       = "Bronze-1.6"
+
+# Commands
+CaseSensitive = False
+
+CMDRegOther = "TRegisterOther!" # Register anouther user
+CMDRegister = "TRegister!" # Self register timezone
+CMDShutdown = "TEnd!" # Shutdown the bot (admin)
+CMDStatus   = "TPlay!" # Change the game the bot is "playing"
+CMDReport   = "TReport!" # Report debug info
+
+
 
 
 
@@ -88,7 +103,7 @@ class TimeBot(discord.Client):
 
 
         # Report for debugging purposes
-        if await self.IsCommand(message, "levReport!"):
+        if await self.IsCommand(message, CMDReport):
             report = [
                 "Version %s" % Version,
                 "Running on: Windows" if osname == "nt" else "Running on: Unix-Based",
@@ -99,44 +114,75 @@ class TimeBot(discord.Client):
             await message.channel.send('\n'.join(report))
 
         # Cleanly shutdown (Not strictly needed disable if desired)
-        if await self.IsCommand(message, "levEnd!"):
+        if await self.IsCommand(message, CMDShutdown):
             message.content.split(' ')
 
-            await message.channel.send("Logging admin command...")
             await message.channel.send("Shutting Down!")
             await self.change_presence(activity=discord.Game(name="Shutting Down"))
             await self.close()
             return
 
         # Change status message of the bot
-        if await self.IsCommand(message, "levPlay!"):
+        if await self.IsCommand(message, CMDStatus):
             message.content = message.content.split(' ')
             await self.change_presence(activity=discord.Game(name=' '.join(message.content[2:])))
-            await message.channel.send("Logging admin command...\nChanged Status!")
+            await message.channel.send("Changed Status!")
+
+        # Syntax: TRegister! America/New_York
+        if await self.IsCommand(message, CMDRegister, admin=False):
+            db = json.load(open("timezones.json", 'rb'))
+            message.content = message.content.split(' ')
+
+            AuthorId = message.author.id
+            AuthorName = message.author.name
+            Timezone = message.content[1]
+
+            # Checks if the entered timezone is valid
+            try:
+                ZoneInfo(Timezone)
+            except ZoneInfoNotFoundError:
+                await message.channel.send('"' + Timezone + '" is not a valid timezone.')
+                return
+
+            if Timezone not in db['All']:
+                db['All'].append(Timezone)
+
+            db[AuthorId] = {
+                "name": AuthorName,
+                "tz": Timezone
+            }
+
+            if AuthorId not in db['RegisteredUsers']:
+                db['RegisteredUsers'].append(str(AuthorId))
+
+            json.dump(db, open("timezones.json", 'w'), indent=4)
+            await message.channel.send("Registered user!")
+            return
+
 
         # Register a user to a timezone
-        # Syntax: levReg! DiscordUserID FriendlyName Timezone
-        # Eg: levReg! 267494392238047233 Install#0963 America/Denver
-        if await self.IsCommand(message, "levRegister!", admin=False):
+        # Syntax: TRegisterOther! DiscordUserID FriendlyName Timezone
+        # Eg: TRegisterOther! 267494392238047233 Install#0963 America/Denver
+        if await self.IsCommand(message, CMDRegOther):
             db = json.load(open("timezones.json", 'rb'))
             message.content = message.content.split(' ')
 
             # Checks if the entered timezone is valid
             try:
-                ZoneInfo(message.content[3])
+                ZoneInfo(message.content[4])
             except ZoneInfoNotFoundError:
-                await message.channel.send('"' + message.content[3] + '" is not a valid timezone.')
+                await message.channel.send('"' + message.content[4] + '" is not a valid timezone.')
                 return
 
-            if message.content[3] not in db['All']:
+            if message.content[4] not in db['All']:
                 db['All'].append(message.content[3])
 
-            db[message.content[1]] = {}
-            db[message.content[1]]["name"] = message.content[2]
-            db[message.content[1]]["tz"] = message.content[3]
+            db[message.content[2]] = {}
+            db[message.content[2]]["name"] = message.content[3]
+            db[message.content[2]]["tz"] = message.content[4]
 
-            if message.content[1] not in db['RegisteredUsers']:
-                db['RegisteredUsers'].append(message.content[1])
+            if message.content[2] not in db['RegisteredUsers']:
+                db['RegisteredUsers'].append(str(message.content[2]))
 
             json.dump(db, open("timezones.json", 'w'), indent=4)
             await message.channel.send("Registered user!")
