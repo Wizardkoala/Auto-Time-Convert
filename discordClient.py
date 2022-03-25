@@ -2,44 +2,48 @@
 # https://github.com/Wizardkoala/Auto-Time-Convert
 # Python 3.9.6
 # 
+
+import sys
+if sys.version_info[1] <= 8:
+    
+    from backports.zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+else:
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from datetime import datetime as time
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import os
+from time import sleep
 from os import name as osname
 from os import path
+from settings import *
 import json
 import discord
-import pyotp
+
+Version = "Titanium-1.7"
 
 
+def Authorize(userid, requireAdmin=False) -> bool:
+    userid = str(userid)
 
-OnReadyStatus = "10-4 Soldier"
-Version       = "Bronze-1.6"
-
-# Commands
-CaseSensitive = False
-
-CMDRegOther = "TRegisterOther!" # Register anouther user
-CMDRegister = "TRegister!" # Self register timezone
-CMDShutdown = "TEnd!" # Shutdown the bot (admin)
-CMDStatus   = "TPlay!" # Change the game the bot is "playing"
-CMDReport   = "TReport!" # Report debug info
-
-
-
-
-
-def Authorize(code):
-    TOTP = pyotp.TOTP(TOTPToken)
-    return TOTP.verify(str(code))
+    if requireAdmin:
+        if userid in json.load(open("Secret.json", 'r'))["Admins"]:
+            return True
+        else:
+            return False
+    else:
+        return True
     
 
-# Gets the uses timezone from the database
-def GetTimezone(userID):
-    timz = json.load(open("timezones.json", 'rb'))
-    return timz[str(userID)]["tz"]
+# Gets the users timezone from the database
+def GetTimezone(userID: str) -> str:
+    try:
+        timz = json.load(open("timezones.json", 'rb'))
+        return timz[str(userID)]["tz"]
+    except:
+        return "not-regi"
 
 # Converts a string time into a datetime object
-def Format(string, userID):
+def Format(string: str, userID: str) -> any:
     formats = ["%I:%M %p", "%I:%M%p",  "%H:%M", "%I:%p"]
     t = None
     for fmt in formats:
@@ -60,80 +64,60 @@ def Format(string, userID):
 
 # Main Bot Class
 class TimeBot(discord.Client):
-    async def IsCommand(self, msg, Keyword, admin=True):
-        MSGC = msg.content.split(' ')
+    def __init__(self, *, loop=None, **options):
+        self.Secretdb = json.load(open("Secret.json", 'r'))
+        super().__init__(loop=loop, **options)
 
-        if Keyword in MSGC:
-            if admin and not(Authorize(MSGC[1])):
-                await msg.channel.send("Authorization Failed.")
-                return False
-            elif admin:
-                print("Admin Command Used:", MSGC)
-
-            
-            return True
-
-        else: return False
-
-    async def on_connect(self):
-        print('[INFO] Connecting to discord!')
-
-    async def on_ready(self):
-        print('[INFO] Bot is ready!')
-        await self.change_presence(activity=discord.Game(name=OnReadyStatus))
-
-    async def on_message(self, message):
-        # Everytime the bot is used check to see if there are unneeded timezones saved.
-        # If so remove them.
-        if message.author == self.user:
-            db = json.load(open("timezones.json", 'rb'))
-
-            for tmz in db["All"]:
-                used = False
-                for user in db["RegisteredUsers"]:
-                    if db[user]["tz"] == tmz:
-                        used = True
-                        continue
-
-                if not used:
-                    print("[INFO] Removing Unused Timezone:", tmz)
-                    db['All'].remove(tmz)
-                    json.dump(db, open("timezones.json", 'w'), indent=4)
-            return
+    class Commands():
+        async def registerOther(self, message: discord.Message) -> None:
+            """Register a user to a timezone
+            Syntax: TRegisterOther! DiscordUserID Timezone\n
+            Eg. TRegisterOther! 267494392238047233 America/New_York"""
 
 
-        # Report for debugging purposes
-        if await self.IsCommand(message, CMDReport):
-            report = [
-                "Version %s" % Version,
-                "Running on: Windows" if osname == "nt" else "Running on: Unix-Based",
-                "Latency: %ims" % int(self.latency * 1000),
-                "Users num %i" % len(json.load(open("timezones.json", 'rb'))["RegisteredUsers"]),
-                "Timezone num: %i" % len(json.load(open("timezones.json", 'rb'))["All"])
-            ]
-            await message.channel.send('\n'.join(report))
+            if not Authorize(message.author.id, requireAdmin=IsAdminRegOther):
+                await message.channel.send("You do not have the permission to do this.")
+                return
 
-        # Cleanly shutdown (Not strictly needed disable if desired)
-        if await self.IsCommand(message, CMDShutdown):
-            message.content.split(' ')
-
-            await message.channel.send("Shutting Down!")
-            await self.change_presence(activity=discord.Game(name="Shutting Down"))
-            await self.close()
-            return
-
-        # Change status message of the bot
-        if await self.IsCommand(message, CMDStatus):
-            message.content = message.content.split(' ')
-            await self.change_presence(activity=discord.Game(name=' '.join(message.content[2:])))
-            await message.channel.send("Changed Status!")
-
-        # Syntax: TRegister! America/New_York
-        if await self.IsCommand(message, CMDRegister, admin=False):
             db = json.load(open("timezones.json", 'rb'))
             message.content = message.content.split(' ')
 
-            AuthorId = message.author.id
+            # Checks if the entered timezone is valid
+            try:
+                ZoneInfo(message.content[2])
+            except ZoneInfoNotFoundError:
+                await message.channel.send('"' + message.content[2] + '" is not a valid timezone.')
+                return
+
+            if message.content[2] not in db['All']:
+                db['All'].append(message.content[2])
+
+            targetName = await self.fetch_user(message.content[1])
+            targetName = str(targetName)
+            db[message.content[1]] = {}
+            db[message.content[1]]["name"] = targetName
+            db[message.content[1]]["tz"] = message.content[2]
+
+            print()
+
+            if message.content[1] not in db['RegisteredUsers']:
+                db['RegisteredUsers'].append(str(message.content[1]))
+
+            json.dump(db, open("timezones.json", 'w'), indent=4)
+            await message.channel.send(f"Registered user: {targetName}!")
+
+        async def registerSelf(self, message) -> None:
+            """Alows users to register their own timezone
+            eg. TRegister! America/New_York"""
+
+            if not Authorize(message.author.id, requireAdmin=IsAdminRegSelf):
+                await message.channel.send("You do not have the permission to do this.")
+                return
+
+            db = json.load(open("timezones.json", 'rb'))
+            message.content = message.content.split(' ')
+
+            AuthorId = str(message.author.id)
             AuthorName = message.author.name
             Timezone = message.content[1]
 
@@ -157,37 +141,101 @@ class TimeBot(discord.Client):
 
             json.dump(db, open("timezones.json", 'w'), indent=4)
             await message.channel.send("Registered user!")
-            return
 
-
-        # Register a user to a timezone
-        # Syntax: TRegisterOther! DiscordUserID FriendlyName Timezone
-        # Eg: TRegisterOther! 267494392238047233 Install#0963 America/Denver
-        if await self.IsCommand(message, CMDRegOther):
-            db = json.load(open("timezones.json", 'rb'))
-            message.content = message.content.split(' ')
-
-            # Checks if the entered timezone is valid
-            try:
-                ZoneInfo(message.content[4])
-            except ZoneInfoNotFoundError:
-                await message.channel.send('"' + message.content[4] + '" is not a valid timezone.')
+        async def shutdown(self, message) -> None:
+            """Shuts down the bot."""
+            if not Authorize(message.author.id, requireAdmin=IsAdminShutdown):
+                await message.channel.send("You do not have the permission to do this.")
                 return
 
-            if message.content[4] not in db['All']:
-                db['All'].append(message.content[3])
+            await message.channel.send("Shutting Down!")
+            await self.change_presence(activity=discord.Game(name="Shutting Down"))
+            await self.close()
 
-            db[message.content[2]] = {}
-            db[message.content[2]]["name"] = message.content[3]
-            db[message.content[2]]["tz"] = message.content[4]
+        async def status(self, message) -> None:
+            """Changes the status message of the bot
+            eg. TPlay! [Message]"""
+            if not Authorize(message.author.id, requireAdmin=IsAdminStatus):
+                await message.channel.send("You do not have the permission to do this.")
+                return
 
-            if message.content[2] not in db['RegisteredUsers']:
-                db['RegisteredUsers'].append(str(message.content[2]))
+            message.content = message.content.split(' ')
+            await self.change_presence(activity=discord.Game(name=' '.join(message.content[1:])))
+            await message.channel.send("Changed Status!")
 
-            json.dump(db, open("timezones.json", 'w'), indent=4)
-            await message.channel.send("Registered user!")
+        async def report(self, message) -> None:
+            """Sends a debug report."""
+            if not Authorize(message.author.id, requireAdmin=IsAdminReport):
+                await message.channel.send("You do not have the permission to do this.")
+                return
+
+
+            report = [
+                "Version %s" % Version,
+                "Running on: Windows" if osname == "nt" else "Running on: Unix-Based",
+                "Latency: %ims" % int(self.latency * 1000),
+
+                "Users num %i" % len(json.load(open("timezones.json", 'rb'))[
+                    "RegisteredUsers"]),
+
+                "Timezone num: %i" % len(
+                    json.load(open("timezones.json", 'rb'))["All"]),
+            ]
+            await message.channel.send('\n'.join(report))
+
+    async def IsCommand(self, message: discord.Message, Keyword: str, admin=False):
+        MSGC = message.content.split(' ')
+
+        if Keyword in MSGC:
+            if admin and not( Authorize(MSGC[1]) ):
+                await message.channel.send("Authorization Failed.")
+                return False
+            elif admin:
+                print("Admin Command Used:", MSGC)
+            
+            return True
+
+        else: return False
+
+    async def on_connect(self):
+        print('[INFO] Connecting to discord!')
+
+    async def on_ready(self):
+        print('[INFO] Bot is ready!')
+        await self.change_presence(activity=discord.Game(name=OnReadyStatus))
+
+
+    async def on_message(self, message: discord.Message):
+        # Everytime the bot is used check to see if there are unneeded timezones saved.
+        # If so remove them.
+        if message.author == self.user:
+            db = json.load(open("timezones.json", 'rb'))
+
+            for tmz in db["All"]:
+                used = False
+                for user in db["RegisteredUsers"]:
+                    if db[user]["tz"] == tmz:
+                        used = True
+                        continue
+
+                if not used:
+                    print("[INFO] Removing Unused Timezone:", tmz)
+                    db['All'].remove(tmz)
+                    json.dump(db, open("timezones.json", 'w'), indent=4)
             return
 
+        commandLookupTable = [
+            [CMDRegOther, self.Commands.registerOther],
+            [CMDRegister, self.Commands.registerSelf],
+            [CMDShutdown, self.Commands.shutdown],
+            [CMDStatus, self.Commands.status],
+            [CMDReport, self.Commands.report]
+        ]
+
+        for command in commandLookupTable:
+            if await self.IsCommand(message, command[0]):
+                await command[1](self, message=message)
+                return
 
         else:
             ## ---
@@ -200,7 +248,7 @@ class TimeBot(discord.Client):
                     message.content = message.content[:message.content.index(c)] + ":00" + \
                         message.content[message.content.index(c):]
 
-            # Checks if there is a comma that is preceded and followed by an int
+            # Checks if there is a colon that is preceded and followed by an int
             targetTime = None
             for i, l in enumerate(message.content):
                 if (l == ":"):
@@ -242,19 +290,22 @@ class TimeBot(discord.Client):
                 await message.channel.send("You don't have a timezone registered.")
 
             else:
+                emb = discord.Embed()
+                emb.color = discord.Color.light_grey()
+
                 ConvertTo = json.load(
                     open("timezones.json", 'rb'))["All"]
                 ConvertTo.remove(
                     GetTimezone(message.author.id))
 
-                EndMessage = ""
                 for tmz in ConvertTo:
-                    EndMessage += (tmz + " " + str(t.astimezone(ZoneInfo(tmz)).strftime("%I:%M %p")) + " ")
+                    emb.add_field(
+                        name=tmz,
+                        value=str(t.astimezone(ZoneInfo(tmz)).strftime("%I:%M %p")),
+                        inline=True
+                    )
 
-                    if ConvertTo.index(tmz) != len(ConvertTo)-1:
-                        EndMessage += "| "
-
-                await message.channel.send(EndMessage)
+                await message.channel.send(embed=emb)
             ## ---
 
         
@@ -264,18 +315,20 @@ if __name__ == "__main__":
     if not path.exists("Secret.json"):
         db = {
             "Bot": input("Bot Token: "),
-            "TOTP": pyotp.random_base32()
+            "Status": "10-4 Soldier",
+            "Admins": [input("What is your Discord client ID: ")],
         }
-        print("TOTP Token: %s" % db['TOTP'])
 
         json.dump(db, open("Secret.json", 'w'), indent=4)
+
+    else:
+        db = json.load(open("Secret.json", 'r'))
+
+    Token = db["Bot"]
+    OnReadyStatus = db['Status']
     
     if not path.exists("timezones.json"):
         open("timezones.json", 'w').write('{"All": [], "RegisteredUsers":[]}')
-
-    db = json.load(open("Secret.json", 'r'))
-    Token = db["Bot"]
-    TOTPToken = db["TOTP"]
 
     client = TimeBot()
     client.run(Token)

@@ -18,24 +18,33 @@ can see all channels.
 2. Run `pip3 install -r requirements.txt` in the codes directory.
 3. Run the `discordClient.py` file.
 4. When prompted type in the Bot token you saved earlier.
-5. Copy the `TOTP:` token it provides and save it in a safe space. 
-Anyone you share this with will be able to shutdown the bot and gain information about the machine it is running on.
-6. Setup the TOTP token in any authenticator app of your choosing.
+5. Type in your own discord accounts user-id (Getting a user id is explained in the "Setting up users timezone" section) this id will serve as the first admin
+Anyone who is an admin will be able to shutdown the bot and gain information about the machine it is running on.
+6. To add more admins open the Secret.json file and add the users id in the list seperating them by a comma. This will be imporved later.
 ### Setting up users timezone
-Keep in mind anyone can change there own timezone with `TRegister! <Timezone>`. To setup someone elses timezone type: `TRegisterOther! <UserId> <Friendly Name> <Timezone>`
-- UserId: This is retreived by right-clicking on someone with developer mode enabled and selecting, "Copy ID"
-- Friendly Name: This is just a name so you can identify them in the timezones.json file if needed
+Keep in mind anyone can change there own timezone with `TRegister! <Timezone>`. To setup someone elses timezone type: `TRegisterOther! <UserId> <Timezone>`
+- UserId: This is retreived by right-clicking on someone in Discord with developer mode enabled and selecting, "Copy ID"
 - Timezone: This is the timezone the user is in. eg. America/Denver
 
 ## Commands
-All of these commands are the defaults and can be changed in `discordClient.py`
-- `TReport! <6-digit OTP>`
+All of these commands are the defaults and can be changed in `settings.py`
+- `TReport!`
     - An admin-only command that reports details of the bot and the machine it is running on
-- `TPlay! <6-digit OTP> <Message>`
+- `TPlay! <Message>`
     - Admin-only command that changes the status of the bot
-- `TEnd! <6-digit OTP>`
+- `TEnd!`
     - Shuts down the bot
 - `TRegister! <Timezone>`
     - Register the user who sent the message's timezone
-- `TRegisterOther! <6-digit OTP> <UserID> <Friendly Name> <Timezone>`
+- `TRegisterOther! <UserID> <Timezone>`
     - Sets anouther users timezone.  This is explained further in setting up timezones section
+
+## Update 1.7
+- Improved the look of time conversions using embeds.
+- Moved all user configurable settings to `settings.py`.
+- Allowed users to change wether a command should be admin-only or not.
+- Cleaned up the code by moving commands to their own class.
+- Removed one-time passwords for admin commands
+- Added admin system
+- Changed inital setup. This will require you to delete your existing `Secret.json` file and reset it up. `timezones.json` files should work just fine.
+- Put a settings in `Secret.json` that saves the current status message and restores it next boot.
