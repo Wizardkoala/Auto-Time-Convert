@@ -19,7 +19,7 @@ from settings import *
 import json
 import discord
 
-Version = "Titanium-1.7"
+Version = "Titanium-1.7.1"
 
 
 def Authorize(userid, requireAdmin=False) -> bool:
@@ -159,8 +159,12 @@ class TimeBot(discord.Client):
                 await message.channel.send("You do not have the permission to do this.")
                 return
 
-            message.content = message.content.split(' ')
-            await self.change_presence(activity=discord.Game(name=' '.join(message.content[1:])))
+            status = ' '.join(message.content.split(' ')[1:])
+            db = json.load(open("Secret.json", 'r'))
+            db['Status'] = status
+            json.dump(db, open("Secret.json", 'w'), indent=4)
+
+            await self.change_presence(activity=discord.Game(name=status))
             await message.channel.send("Changed Status!")
 
         async def report(self, message) -> None:
