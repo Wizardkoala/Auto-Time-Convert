@@ -5,7 +5,6 @@
 
 import sys
 if sys.version_info[1] <= 8:
-    
     from backports.zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 else:
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -19,7 +18,7 @@ from settings import *
 import json
 import discord
 
-Version = "Titanium-1.7.1"
+Version = "Titanium-1.7.2"
 
 
 def Authorize(userid, requireAdmin=False) -> bool:
@@ -64,9 +63,10 @@ def Format(string: str, userID: str) -> any:
 
 # Main Bot Class
 class TimeBot(discord.Client):
-    def __init__(self, *, loop=None, **options):
+    def __init__(self, *, intents, loop=None, **options):
         self.Secretdb = json.load(open("Secret.json", 'r'))
-        super().__init__(loop=loop, **options)
+
+        super().__init__(intents=intents, loop=loop, **options)
 
     class Commands():
         async def registerOther(self, message: discord.Message) -> None:
@@ -334,5 +334,7 @@ if __name__ == "__main__":
     if not path.exists("timezones.json"):
         open("timezones.json", 'w').write('{"All": [], "RegisteredUsers":[]}')
 
-    client = TimeBot()
+    intend = discord.Intents.all()
+
+    client = TimeBot(intents=intend)
     client.run(Token)
