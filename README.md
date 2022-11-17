@@ -19,7 +19,7 @@ can see all channels.
 2. Execute `python -m pip3 install -r requirements.txt` in the project directory.
 3. Run `discordClient.py`.
 4. When prompted type in the Bot token you saved earlier.
-5. Type in your own discord accounts user-id (Getting a user id is explained in #setting-up-users-timezone) this id will serve as the first admin
+5. Type in your own discord accounts user-id (Getting a user id is explained in [#setting-up-users-timezone](https://github.com/Wizardkoala/Auto-Time-Convert/edit/master/README.md#setting-up-users-timezone) ) this id will serve as the first admin
 Anyone who is an admin will be able to shutdown the bot and gain information about the machine it is running on.
 6. To add more admins open the Secret.json file and add the users id in the list seperating them by a comma. This will be imporved later.
 ### Setting up users timezone
