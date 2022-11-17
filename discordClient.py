@@ -1,326 +1,163 @@
-# Wizardkoala/2021
+# Wizardkoala/2022
 # https://github.com/Wizardkoala/Auto-Time-Convert
-# Python 3.9.6
-# 
+# Python 3.11.0
+#
 
 import sys
 if sys.version_info[1] <= 8:
-    from backports.zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    from backports.zoneinfo import ZoneInfo
 else:
-    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    from zoneinfo import ZoneInfo
 
 from datetime import datetime as time
-import os
-from time import sleep
-from os import name as osname
 from os import path
 from settings import *
 import json
+
 import discord
+from discord import app_commands
 
-Version = "Titanium-1.7.2"
+from commands import *
+
+Version = "Lithium-1.8.0"
 
 
-def Authorize(userid, requireAdmin=False) -> bool:
-    userid = str(userid)
-
-    if requireAdmin:
-        if userid in json.load(open("Secret.json", 'r'))["Admins"]:
-            return True
-        else:
-            return False
-    else:
-        return True
-    
-
-# Gets the users timezone from the database
-def GetTimezone(userID: str) -> str:
-    try:
-        timz = json.load(open("timezones.json", 'rb'))
-        return timz[str(userID)]["tz"]
-    except:
-        return "not-regi"
-
-# Converts a string time into a datetime object
-def Format(string: str, userID: str) -> any:
-    formats = ["%I:%M %p", "%I:%M%p",  "%H:%M", "%I:%p"]
-    t = None
-    for fmt in formats:
-        try:
-            # Sets all needed values from the datetime object 't'
-            t = time.strptime(string, fmt)
-            t = t.replace(day=time.today().date().day)
-            t = t.replace(month=time.today().date().month)
-            t = t.replace(year=time.today().date().year)
-            t = t.replace(tzinfo=ZoneInfo(GetTimezone(userID)))
-        except ZoneInfoNotFoundError:
-            return "not-regi"
-        except ValueError:
-            pass
-        finally:
-            pass
-    return t
 
 # Main Bot Class
 class TimeBot(discord.Client):
     def __init__(self, *, intents, loop=None, **options):
         self.Secretdb = json.load(open("Secret.json", 'r'))
-
         super().__init__(intents=intents, loop=loop, **options)
-
-    class Commands():
-        async def registerOther(self, message: discord.Message) -> None:
-            """Register a user to a timezone
-            Syntax: TRegisterOther! DiscordUserID Timezone\n
-            Eg. TRegisterOther! 267494392238047233 America/New_York"""
-
-
-            if not Authorize(message.author.id, requireAdmin=IsAdminRegOther):
-                await message.channel.send("You do not have the permission to do this.")
-                return
-
-            db = json.load(open("timezones.json", 'rb'))
-            message.content = message.content.split(' ')
-
-            # Checks if the entered timezone is valid
-            try:
-                ZoneInfo(message.content[2])
-            except ZoneInfoNotFoundError:
-                await message.channel.send('"' + message.content[2] + '" is not a valid timezone.')
-                return
-
-            if message.content[2] not in db['All']:
-                db['All'].append(message.content[2])
-
-            targetName = await self.fetch_user(message.content[1])
-            targetName = str(targetName)
-            db[message.content[1]] = {}
-            db[message.content[1]]["name"] = targetName
-            db[message.content[1]]["tz"] = message.content[2]
-
-            print()
-
-            if message.content[1] not in db['RegisteredUsers']:
-                db['RegisteredUsers'].append(str(message.content[1]))
-
-            json.dump(db, open("timezones.json", 'w'), indent=4)
-            await message.channel.send(f"Registered user: {targetName}!")
-
-        async def registerSelf(self, message) -> None:
-            """Alows users to register their own timezone
-            eg. TRegister! America/New_York"""
-
-            if not Authorize(message.author.id, requireAdmin=IsAdminRegSelf):
-                await message.channel.send("You do not have the permission to do this.")
-                return
-
-            db = json.load(open("timezones.json", 'rb'))
-            message.content = message.content.split(' ')
-
-            AuthorId = str(message.author.id)
-            AuthorName = message.author.name
-            Timezone = message.content[1]
-
-            # Checks if the entered timezone is valid
-            try:
-                ZoneInfo(Timezone)
-            except ZoneInfoNotFoundError:
-                await message.channel.send('"' + Timezone + '" is not a valid timezone.')
-                return
-
-            if Timezone not in db['All']:
-                db['All'].append(Timezone)
-
-            db[AuthorId] = {
-                "name": AuthorName,
-                "tz": Timezone
-            }
-
-            if AuthorId not in db['RegisteredUsers']:
-                db['RegisteredUsers'].append(str(AuthorId))
-
-            json.dump(db, open("timezones.json", 'w'), indent=4)
-            await message.channel.send("Registered user!")
-
-        async def shutdown(self, message) -> None:
-            """Shuts down the bot."""
-            if not Authorize(message.author.id, requireAdmin=IsAdminShutdown):
-                await message.channel.send("You do not have the permission to do this.")
-                return
-
-            await message.channel.send("Shutting Down!")
-            await self.change_presence(activity=discord.Game(name="Shutting Down"))
-            await self.close()
-
-        async def status(self, message) -> None:
-            """Changes the status message of the bot
-            eg. TPlay! [Message]"""
-            if not Authorize(message.author.id, requireAdmin=IsAdminStatus):
-                await message.channel.send("You do not have the permission to do this.")
-                return
-
-            status = ' '.join(message.content.split(' ')[1:])
-            db = json.load(open("Secret.json", 'r'))
-            db['Status'] = status
-            json.dump(db, open("Secret.json", 'w'), indent=4)
-
-            await self.change_presence(activity=discord.Game(name=status))
-            await message.channel.send("Changed Status!")
-
-        async def report(self, message) -> None:
-            """Sends a debug report."""
-            if not Authorize(message.author.id, requireAdmin=IsAdminReport):
-                await message.channel.send("You do not have the permission to do this.")
-                return
-
-
-            report = [
-                "Version %s" % Version,
-                "Running on: Windows" if osname == "nt" else "Running on: Unix-Based",
-                "Latency: %ims" % int(self.latency * 1000),
-
-                "Users num %i" % len(json.load(open("timezones.json", 'rb'))[
-                    "RegisteredUsers"]),
-
-                "Timezone num: %i" % len(
-                    json.load(open("timezones.json", 'rb'))["All"]),
-            ]
-            await message.channel.send('\n'.join(report))
-
-    async def IsCommand(self, message: discord.Message, Keyword: str, admin=False):
-        MSGC = message.content.split(' ')
-
-        if Keyword in MSGC:
-            if admin and not( Authorize(MSGC[1]) ):
-                await message.channel.send("Authorization Failed.")
-                return False
-            elif admin:
-                print("Admin Command Used:", MSGC)
-            
-            return True
-
-        else: return False
 
     async def on_connect(self):
         print('[INFO] Connecting to discord!')
 
+    # Sets the status to the previously saved value and sync slash commands
+    # Keep in mind when changing slash commands globaly will take up to 2 hours to update.
     async def on_ready(self):
-        print('[INFO] Bot is ready!')
+        await tree.sync()
         await self.change_presence(activity=discord.Game(name=OnReadyStatus))
 
+        print('[INFO] Bot is ready!')
 
+    # Check to see someone has sent a time in chat and responds accordingly
     async def on_message(self, message: discord.Message):
-        # Everytime the bot is used check to see if there are unneeded timezones saved.
-        # If so remove them.
-        if message.author == self.user:
-            db = json.load(open("timezones.json", 'rb'))
-
-            for tmz in db["All"]:
-                used = False
-                for user in db["RegisteredUsers"]:
-                    if db[user]["tz"] == tmz:
-                        used = True
-                        continue
-
-                if not used:
-                    print("[INFO] Removing Unused Timezone:", tmz)
-                    db['All'].remove(tmz)
-                    json.dump(db, open("timezones.json", 'w'), indent=4)
+        if message.author.bot: #Ignores all bot input including itself.
             return
 
-        commandLookupTable = [
-            [CMDRegOther, self.Commands.registerOther],
-            [CMDRegister, self.Commands.registerSelf],
-            [CMDShutdown, self.Commands.shutdown],
-            [CMDStatus, self.Commands.status],
-            [CMDReport, self.Commands.report]
-        ]
+        zones = json.load(open("timezones.json", 'r'))
+        time = GetTime(message.content)
 
-        for command in commandLookupTable:
-            if await self.IsCommand(message, command[0]):
-                await command[1](self, message=message)
-                return
+        # Ignores all message that do not contain a time
+        if not time: return
 
-        else:
-            ## ---
-            ## Checks if there is a time in the message, if so extracts it
+        # Ensures the user that sent the time has a registered timezone
+        if str(message.author.id) not in zones['RegisteredUsers']:
+            await message.reply("⚠️ You do not have a registered timezone. Use /register.")
+            return
 
-            # Checks if 'am' or 'pm' are in the message
-            checks = ["pm", "am"] 
-            for c in checks:
-                if c in message.content:
-                    message.content = message.content[:message.content.index(c)] + ":00" + \
-                        message.content[message.content.index(c):]
+        # Get datetime object of the time
+        t = Format(time, str(message.author.id))
 
-            # Checks if there is a colon that is preceded and followed by an int
-            targetTime = None
-            for i, l in enumerate(message.content):
-                if (l == ":"):
-                    try:
-                        int(message.content[i+1] + message.content[i+2] + message.content[i-1])
-                        targetTime = ""
-                        break
-                    except Exception:
-                        pass
+        # Init a discord embed
+        emb = discord.Embed()
+        emb.color = discord.Color.light_grey()
 
-            if targetTime != None:
-                try:
-                    assert i-2 >= 0
-                    int(message.content[i-2])
-                    targetTime = message.content[i-2:i+3]
-                except Exception:
-                    targetTime = message.content[i-1:i+3]
+        ConvertTo = json.load(
+            open("timezones.json", 'rb'))["All"]
+        ConvertTo.remove(
+            GetTimezone(message.author.id))
 
-                if "pm" in message.content:
-                    targetTime += "pm"
-                elif "am" in message.content:
-                    targetTime += "am"
-                elif len(targetTime) == 4:
-                    # If a pm or am is not specified then assume pm
-                    targetTime += "pm"
-                    await message.channel.send("Assuming time was PM")
+        # Converts every timezone that has been registered.
+        #    (not including the orgin user's timezone)
+        for tmz in ConvertTo:
+            emb.add_field(
+                name=tmz,
+                # Converts the timezone with the "astimezone" method
+                value=str(t.astimezone(ZoneInfo(tmz)).strftime("%I:%M %p")),
+                inline=True
+            )
 
-            else:  # Return if we didn't find a time in the message
-                return
-            ## ---
+        await message.channel.send(embed=emb)
+        # ---
 
-            ## ---
-            ## Converts the time into all other registed timezones
-            t = Format(targetTime, message.author.id)
-            if t == None:
-                await message.channel.send("I couldn't convert the timezone on that.")
 
-            elif t == "not-regi":
-                await message.channel.send("You don't have a timezone registered.")
+def GetTime(message: str) -> list | bool:
+    # Needed for meridiem checks
+    message = message.lower() 
 
+    #Colon based detection
+    try:
+        while ":" in message:
+            index = message.index(":")
+
+            # Splits the time into a list [hour, minute]
+            time = message[index-2:index+3].split(':')
+            time[0] = time[0].replace(" ", "0")
+
+            if not time[0].isdigit() or not time[1].isdigit():
+                message = message.replace(":", "", 1)
+                continue
+
+            # Corrects time to comply with datetime 0..23 range
+            if time[0] == "12" and "pm" in message:
+                time[0] = "00" 
+
+            if "am" in message:
+                return [time[0], time[1]]
             else:
-                emb = discord.Embed()
-                emb.color = discord.Color.light_grey()
+                return [str(int(time[0]) + 12), time[1]]
 
-                ConvertTo = json.load(
-                    open("timezones.json", 'rb'))["All"]
-                ConvertTo.remove(
-                    GetTimezone(message.author.id))
+    except ValueError:
+        return False
 
-                for tmz in ConvertTo:
-                    emb.add_field(
-                        name=tmz,
-                        value=str(t.astimezone(ZoneInfo(tmz)).strftime("%I:%M %p")),
-                        inline=True
-                    )
+    # meridiem based detection (am, pm)
+    meridiems = ["am", "pm"]
+    for meridiem in meridiems:
+        if meridiem not in message:
+            continue
 
-                await message.channel.send(embed=emb)
-            ## ---
+        # Check if meridiem is seperated from time
+        if meridiem in message.split(' '):
+            message = message.split(' ')
+            index = message.index(meridiem)
 
-        
+            hour = message[index-1].zfill(2)
+            if not hour.isdigit():
+                return False
+
+            
+
+        # Combined with time
+        else:
+            index = message.index(meridiem)
+            hour = message[index-2:index].replace(" ", "0")
+
+            if hour == "":
+                hour = message[index-1:index].zfill(2)
+
+            if not hour.isdigit() or hour == "00":
+                return False
+
+        if hour == "12" and "pm" in message:
+            hour = "00"
+
+        elif meridiem == "pm":
+            hour = int(hour)
+            hour += 12
+            
+        return [str(hour), "00"]
+
+    return False
 
 
 if __name__ == "__main__":
+    # Checks for first time startup
     if not path.exists("Secret.json"):
         db = {
             "Bot": input("Bot Token: "),
             "Status": "10-4 Soldier",
-            "Admins": [input("What is your Discord client ID: ")],
+            "Admins": [input("What is your Discord client ID: ")]
         }
 
         json.dump(db, open("Secret.json", 'w'), indent=4)
@@ -330,11 +167,71 @@ if __name__ == "__main__":
 
     Token = db["Bot"]
     OnReadyStatus = db['Status']
-    
+
     if not path.exists("timezones.json"):
         open("timezones.json", 'w').write('{"All": [], "RegisteredUsers":[]}')
 
     intend = discord.Intents.all()
 
     client = TimeBot(intents=intend)
+
+    tree = app_commands.CommandTree(client)
+
+    # Slash command to register another users timezone
+    @tree.command(
+        name="registeruser",
+        description="Register anouther users timezone (Or your own if you like being over complicated)")
+    async def registerOther(interaction: discord.Interaction, targetid: str, timezone: str):
+        user = await client.fetch_user(targetid)
+        await interaction.response.send_message(
+            Commands.registerOther(interaction.user.id, user, timezone)
+        )
+
+    # Slash command used to register your own timezone
+    @tree.command(
+        name="register",
+        description="Register your own timezone eg. America/New_York")
+    async def registerOther(interaction: discord.Interaction, timezone: str):
+        await interaction.response.send_message(
+            Commands.registerSelf(interaction.user, timezone)
+        )
+
+    # Slash command to shutdown the bot
+    @tree.command(
+        name="shutdown",
+        description="Shutsdown the Bot")
+    async def shutdown(interaction: discord.Interaction):
+        """Shuts down the bot."""
+        if not Authorized(interaction.user.id, requireAdmin=IsAdminShutdown):
+            return "You do not have the permission to do this."
+
+        await interaction.response.send_message("Shutting Down!")
+        await client.close()
+
+    # Slash command to change the playing status
+    @tree.command(
+        name="status",
+        description="Changes the status message of the bot")
+    async def status(interaction: discord.Interaction, message: str):
+        """Changes the status message of the bot"""
+
+        if not Authorized(interaction.user.id, requireAdmin=IsAdminStatus):
+            await interaction.response.send_message("You do not have the permission to do this.")
+            return
+
+        db = json.load(open("Secret.json", 'r'))
+        db['Status'] = message
+        json.dump(db, open("Secret.json", 'w'), indent=4)
+
+        await client.change_presence(activity=discord.Game(name=message))
+        await interaction.response.send_message("Changed Status!")
+
+    @tree.command(
+        name="report",
+        description="Sends a system report.")
+    async def sysReport(interaction: discord.Interaction):
+        await interaction.response.send_message(
+            Commands.sendReport(interaction, Version, client.latency)
+        )
+
     client.run(Token)

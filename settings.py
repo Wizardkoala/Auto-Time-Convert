@@ -1,16 +1,12 @@
-CMDRegOther="TRegisterOther!" # Register anouther user
-IsAdminRegOther=True
 
-CMDRegister="TRegister!"      # Self register timezone
-IsAdminRegSelf = False
+IsAdminRegOther = True  # Register anouther user
 
-CMDShutdown = "TEnd!"         # Shutdown the bot (admin)
-IsAdminShutdown = True
+IsAdminRegSelf = False  # Self register timezone
 
-CMDStatus = "TPlay!"          # Change the game the bot is "playing"
-IsAdminStatus = True
+IsAdminShutdown = True  # Shutdown the bot (admin)
 
-CMDReport = "TReport!"        # Report debug info
-IsAdminReport = True
+IsAdminStatus = True    # Change the game the bot is "playing"
+    
+IsAdminReport = True    # Report debug info
 
-CaseSensitive = False         # If commands are case sensitive
+

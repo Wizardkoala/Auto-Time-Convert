@@ -1,2 +1,3 @@
 backports.statistics==0.1.0
 discord.py==2.0.1
+tzdata==2022.6
