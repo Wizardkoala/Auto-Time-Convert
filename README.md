@@ -15,30 +15,21 @@ It also does not matter if there are words before or after the time that was sen
 
 ### Creating a Discord Bot
 
-1. Go to <https://discord.com/developers/applications> and create a new application.
+1. Go to [#setting-up-users-timezone](https://github.com/Wizardkoala/Auto-Time-Convert/edit/master/README.md#setting-up-users-timezone) and create a new application.
 2. Under the 'Bot' tab click add bot.
 3. Enable all Privileged Gateway Intents intents.
 4. Copy the Bot token and save it in a safe place, NEVER share this token.
 5. Invite the Discord bot to your server with the Administrator permission to ensure it can see all channels.
 
 ### Setting up the code
-<<<<<<< HEAD
 
-1. Download and install Python 3.11.0 or newer
-2. Download and extract the source code.
-3. Execute `python -m pip3 install -r requirements.txt` in the project directory. (Exact command may differ depending on OS)
-4. Run `python discordClient.py`.
-5. When prompted type in the Bot token you saved earlier.
-6. Type in your own discord accounts user-id (Getting a user id is explained in #setting-up-users-timezone) this id will serve as the first admin
-=======
 1. Download and extract the source code.
 2. Execute `python -m pip3 install -r requirements.txt` in the project directory.
 3. Run `discordClient.py`.
 4. When prompted type in the Bot token you saved earlier.
-5. Type in your own discord accounts user-id (Getting a user id is explained in [#setting-up-users-timezone](https://github.com/Wizardkoala/Auto-Time-Convert/edit/master/README.md#setting-up-users-timezone) ) this id will serve as the first admin
->>>>>>> 42d790e9ce1682492d283029184665d72105070d
+5. Type in your own discord accounts user-id (Getting a user id is explained in #setting-up-users-timezone) this id will serve as the first admin
 Anyone who is an admin will be able to shutdown the bot and gain information about the machine it is running on.
-7. To add more admins open the `Secret.json` file and add the user's id in the list seperating them by a comma (,).
+6. To add more admins open the `Secret.json` file and add the user's id in the list seperating them by a comma (,).
 
 ### Setting up users timezone
 
