@@ -80,7 +80,7 @@ class TimeBot(discord.Client):
         # ---
 
 
-def GetTime(message: str) -> list | bool:
+def GetTime(message: str) -> any:
     # Needed for meridiem checks
     message = message.lower() 
 
