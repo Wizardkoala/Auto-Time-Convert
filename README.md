@@ -81,6 +81,8 @@ All commands are now slash commands. Simply type a slash and click on the bot to
 - Fixed `5:00` time format
 - Defaulted `5:00` format to 24 hour format instead of assuming PM
 - Added `A.M` and `A.M.` time formats
+- Updated discord.py package to 2.1.1
+- Updated tzdata package to 2022.7
 
 ## Update 1.8
 

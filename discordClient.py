@@ -19,7 +19,7 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Iridium-1.9.0"
+Version = "Iridium-1.9.1"
 
 # Main Bot Class
 class TimeBot(discord.Client):
