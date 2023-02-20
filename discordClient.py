@@ -19,9 +19,7 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Lithium-1.8.0"
-
-
+Version = "Iridium-1.9.0"
 
 # Main Bot Class
 class TimeBot(discord.Client):
@@ -93,6 +91,9 @@ def GetTime(message: str) -> list | bool:
 
             # Splits the time into a list [hour, minute]
             time = message[index-2:index+3].split(':')
+            if time == ["0"] or time == ['']:
+                time = message[index-1:index+3].split(':')
+
             time[0] = time[0].replace(" ", "0")
 
             if not time[0].isdigit() or not time[1].isdigit():
@@ -103,16 +104,17 @@ def GetTime(message: str) -> list | bool:
             if time[0] == "12" and "pm" in message:
                 time[0] = "00" 
 
-            if "am" in message:
-                return [time[0], time[1]]
-            else:
+            if "pm" in message:
                 return [str(int(time[0]) + 12), time[1]]
+            else:
+                return [time[0].rjust(2, "0"), time[1]]
+                
 
     except ValueError:
         return False
 
     # meridiem based detection (am, pm)
-    meridiems = ["am", "pm"]
+    meridiems = ["am", "pm", "a.m.", "p.m.", "a.m", "p.m"]
     for meridiem in meridiems:
         if meridiem not in message:
             continue
@@ -152,6 +154,7 @@ def GetTime(message: str) -> list | bool:
 
 
 if __name__ == "__main__":
+    GetTime("5:00")
     # Checks for first time startup
     if not path.exists("Secret.json"):
         db = {
@@ -172,7 +175,6 @@ if __name__ == "__main__":
         open("timezones.json", 'w').write('{"All": [], "RegisteredUsers":[]}')
 
     intend = discord.Intents.all()
-
     client = TimeBot(intents=intend)
 
     tree = app_commands.CommandTree(client)
