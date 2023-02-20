@@ -19,12 +19,12 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Iridium-1.9.1"
+Version = "Iridium-1.9.2"
 
 # Main Bot Class
 class TimeBot(discord.Client):
     def __init__(self, *, intents, loop=None, **options):
-        self.Secretdb = json.load(open("Secret.json", 'r'))
+        self.Secretdb = json.load(open("secret.json", 'r'))
         super().__init__(intents=intents, loop=loop, **options)
 
     async def on_connect(self):
@@ -156,17 +156,17 @@ def GetTime(message: str) -> list | bool:
 if __name__ == "__main__":
     GetTime("5:00")
     # Checks for first time startup
-    if not path.exists("Secret.json"):
+    if not path.exists("secret.json"):
         db = {
             "Bot": input("Bot Token: "),
             "Status": "10-4 Soldier",
             "Admins": [input("What is your Discord client ID: ")]
         }
 
-        json.dump(db, open("Secret.json", 'w'), indent=4)
+        json.dump(db, open("secret.json", 'w'), indent=4)
 
     else:
-        db = json.load(open("Secret.json", 'r'))
+        db = json.load(open("secret.json", 'r'))
 
     Token = db["Bot"]
     OnReadyStatus = db['Status']
@@ -221,9 +221,9 @@ if __name__ == "__main__":
             await interaction.response.send_message("You do not have the permission to do this.")
             return
 
-        db = json.load(open("Secret.json", 'r'))
+        db = json.load(open("secret.json", 'r'))
         db['Status'] = message
-        json.dump(db, open("Secret.json", 'w'), indent=4)
+        json.dump(db, open("secret.json", 'w'), indent=4)
 
         await client.change_presence(activity=discord.Game(name=message))
         await interaction.response.send_message("Changed Status!")

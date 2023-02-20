@@ -29,7 +29,7 @@ It also does not matter if there are words before or after the time that was sen
 4. When prompted type in the Bot token you saved earlier.
 5. Type in your own discord accounts user-id (Getting a user id is explained in #setting-up-users-timezone) this id will serve as the first admin
 Anyone who is an admin will be able to shutdown the bot and gain information about the machine it is running on.
-6. To add more admins open the `Secret.json` file and add the user's id in the list seperating them by a comma (,).
+6. To add more admins open the `secret.json` file and add the user's id in the list seperating them by a comma (,).
 
 ### Setting up users timezone
 
@@ -83,6 +83,7 @@ All commands are now slash commands. Simply type a slash and click on the bot to
 - Added `A.M` and `A.M.` time formats
 - Updated discord.py package to 2.1.1
 - Updated tzdata package to 2022.7
+- Changed `Secret.json` to `secret.json`. You will have to rename your file locally if you used the bot previously.
 
 ## Update 1.8
 
@@ -103,5 +104,5 @@ All commands are now slash commands. Simply type a slash and click on the bot to
 - Cleaned up the code by moving commands to their own class.
 - Removed one-time passwords for admin commands
 - Added admin system
-- Changed inital setup. This will require you to delete your existing `Secret.json` file and reset it up. `timezones.json` files should work just fine.
-- Put a settings in `Secret.json` that saves the current status message and restores it next boot.
+- Changed inital setup. This will require you to delete your existing `secret.json` file and reset it up. `timezones.json` files should work just fine.
+- Put a settings in `secret.json` that saves the current status message and restores it next boot.
