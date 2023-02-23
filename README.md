@@ -71,9 +71,10 @@ All commands are now slash commands. Simply type a slash and click on the bot to
 
 ## Future Plans
 
-- Improve comments
-- Build a .exe version for ease of use
-- Host a public use version
+- Improve comments.
+- Build a .exe version for ease of use. (Probably won't do this unless requested)
+- Host a public use version.
+- Option to only DM individuals the time converstions who react with an emoji instead of always sending the conversion in the text channel.
 
 ## Update 1.9
 
