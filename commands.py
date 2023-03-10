@@ -33,7 +33,7 @@ def Authorized(userid, requireAdmin=False) -> bool:
     userid = str(userid)
 
     if requireAdmin:
-        if userid in json.load(open("Secret.json", 'r'))["Admins"]:
+        if userid in json.load(open("secret.json", 'r'))["Admins"]:
             return True
         else:
             return False
