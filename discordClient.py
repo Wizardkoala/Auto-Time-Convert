@@ -1,4 +1,4 @@
-# Wizardkoala/2022
+# Wizardkoala/2024
 # https://github.com/Wizardkoala/Auto-Time-Convert
 # Python 3.11.0
 #
@@ -19,7 +19,7 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Iridium-1.9.2"
+Version = "Iridium-1.9.3"
 
 # Main Bot Class
 class TimeBot(discord.Client):
@@ -184,10 +184,15 @@ if __name__ == "__main__":
         name="registeruser",
         description="Register anouther users timezone (Or your own if you like being over complicated)")
     async def registerOther(interaction: discord.Interaction, targetid: str, timezone: str):
-        user = await client.fetch_user(targetid)
-        await interaction.response.send_message(
-            Commands.registerOther(interaction.user.id, user, timezone)
-        )
+        try:
+            user = await client.fetch_user(int(targetid))
+            await interaction.response.send_message(
+                Commands.registerOther(interaction.user.id, user, timezone)
+            )
+        except discord.errors.NotFound:
+            await interaction.response.send_message(
+                "That user ID is not valid!"
+            )
 
     # Slash command used to register your own timezone
     @tree.command(

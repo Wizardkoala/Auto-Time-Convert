@@ -75,7 +75,7 @@ class Commands():
             return f'"{timezone}" is not a valid timezone.'
 
         if timezone not in db['All']:
-            db['All'].append(timezone.content[2])
+            db['All'].append(timezone)
 
         db[str(target.id)] = {
             "name": target.name,
