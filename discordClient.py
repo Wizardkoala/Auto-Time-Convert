@@ -6,7 +6,6 @@
 import sys
 from unicodedata import decomposition
 
-from IPython import embed
 if sys.version_info[1] <= 8:
     from backports.zoneinfo import ZoneInfo
 else:
@@ -22,7 +21,7 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Iridium-1.9.4"
+Version = "Iridium-1.9.5"
 
 # Main Bot Class
 class TimeBot(discord.Client):
