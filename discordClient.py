@@ -4,6 +4,9 @@
 #
 
 import sys
+from unicodedata import decomposition
+
+from IPython import embed
 if sys.version_info[1] <= 8:
     from backports.zoneinfo import ZoneInfo
 else:
@@ -19,7 +22,7 @@ from discord import app_commands
 
 from commands import *
 
-Version = "Iridium-1.9.3"
+Version = "Iridium-1.9.4"
 
 # Main Bot Class
 class TimeBot(discord.Client):
@@ -178,6 +181,17 @@ if __name__ == "__main__":
     client = TimeBot(intents=intend)
 
     tree = app_commands.CommandTree(client)
+
+    # Slash command to convert current time
+    @tree.command(
+            name="now",
+            description="Slash command to convert current time"
+    )
+    async def now(interaction: discord.Interaction):
+        await interaction.response.send_message(
+            embed=Commands.now(interaction.user.id)
+        )
+
 
     # Slash command to register another users timezone
     @tree.command(

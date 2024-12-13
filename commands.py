@@ -1,3 +1,4 @@
+from dis import disco
 import discord
 import json
 import sys
@@ -59,6 +60,32 @@ def Format(i, userID: str) -> any:
     return dt
 
 class Commands():
+    def now(author: int):
+        # Get datetime object of the time
+        t = Format(datetime.datetime.now(), str(author))
+
+        # Init a discord embed
+        emb = discord.Embed()
+        emb.color = discord.Color.light_grey()
+
+        ConvertTo = json.load(
+            open("timezones.json", 'rb'))["All"]
+        ConvertTo.remove(
+            GetTimezone(author))
+
+        # Converts every timezone that has been registered.
+        #    (not including the orgin user's timezone)
+        for tmz in ConvertTo:
+            emb.add_field(
+                name=tmz,
+                # Converts the timezone with the "astimezone" method
+                value=str(t.astimezone(ZoneInfo(tmz)).strftime("%I:%M %p")),
+                inline=True
+            )
+
+        return emb
+        
+
     def registerOther(author: int, target: discord.Member, timezone: str) -> str:
         """Register a user to a timezone\n
         Eg. /registerother 267494392238047233 America/New_York"""
